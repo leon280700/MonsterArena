@@ -1,0 +1,11 @@
+# https://docs.gradle.org/current/userguide/version_catalogs.html#sec::toml-dependencies-format
+
+[versions]
+lanterna = "3.1.5"
+lombok = "1.18.48"
+junit-jupiter = "6.0.1"
+
+[libraries]
+lanterna = { module = "com.googlecode.lanterna:lanterna", version.ref = "lanterna" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
