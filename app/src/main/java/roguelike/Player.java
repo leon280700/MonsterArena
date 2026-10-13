@@ -13,13 +13,13 @@ public class Player implements Entity{
 
     @Override
     public void moveLeft() {
-        int[] desiredPosition = new int[]{this.position[0] - 2, this.position[1]};
+        int[] desiredPosition = new int[]{this.position[0] - 1, this.position[1]};
         this.setPosition(desiredPosition);
     }
 
     @Override
     public void moveRight() {
-        int[] desiredPosition = new int[]{this.position[0] + 2, this.position[1]};
+        int[] desiredPosition = new int[]{this.position[0] + 1, this.position[1]};
         this.setPosition(desiredPosition);
     }
 
