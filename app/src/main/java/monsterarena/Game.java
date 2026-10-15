@@ -1,4 +1,4 @@
-package roguelike;
+package monsterarena;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.TextGraphics;
@@ -6,9 +6,12 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import monsterarena.model.Direction;
+import monsterarena.model.Enemy;
+import monsterarena.model.Player;
+import monsterarena.model.Position;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Game {
 
@@ -17,8 +20,6 @@ public class Game {
     Enemy enemy;
 
     Screen screen;
-
-    private long lastEnemyMove;
 
     public Game() {
         this.player = new Player();
@@ -29,8 +30,8 @@ public class Game {
             screen.setCursorPosition(null);
             TextGraphics g = screen.newTextGraphics();
             setGameTitle(g);
-            g.putString(player.getPosition()[0], player.getPosition()[1], player.getMODEL());
-            g.putString(enemy.getPosition()[0], enemy.getPosition()[1], enemy.getMODEL());
+            drawSprite(g, player.getPosition(), player.getSprite());
+            drawSprite(g, enemy.getPosition(), enemy.getSprite());
 
             screen.refresh();
         } catch (IOException e) {
@@ -41,16 +42,22 @@ public class Game {
         screen.clear();
         TextGraphics g = screen.newTextGraphics();
         setGameTitle(g);
-        g.putString(player.getPosition()[0], player.getPosition()[1], player.getMODEL());
-        g.putString(enemy.getPosition()[0], enemy.getPosition()[1], enemy.getMODEL());
+        drawSprite(g, player.getPosition(), player.getSprite());
+        drawSprite(g, enemy.getPosition(), enemy.getSprite());
 
         screen.refresh();
+    }
+
+    private void drawSprite(TextGraphics g, Position position, String[] sprite) {
+        for (int row = 0; row < sprite.length; row++) {
+            g.putString(position.x(), position.y() + row, sprite[row]);
+        }
     }
 
 
     public void startGameLoop(){
         try {
-        lastEnemyMove = System.currentTimeMillis();
+            long lastEnemyMove = System.currentTimeMillis();
         while (true) {
             KeyStroke key = screen.pollInput();
 
@@ -59,13 +66,13 @@ public class Game {
             if (key != null) {
                 if (listenForExitInputs(key)) break;
 
-                int[] playerBefore = player.getPosition().clone();
+                Position playerBefore = player.getPosition();
                 listenForMoveInputs(key);
                 gameOver = pathCrossed(playerBefore, player.getPosition(), enemy.getPosition());
             }
 
             if (!gameOver && System.currentTimeMillis() - lastEnemyMove >= 1000) {
-                int[] enemyBefore = enemy.getPosition().clone();
+                Position enemyBefore = enemy.getPosition();
                 moveEnemyTowardsPlayer();
                 gameOver = pathCrossed(enemyBefore, enemy.getPosition(), player.getPosition());
                 lastEnemyMove = System.currentTimeMillis();
@@ -100,40 +107,40 @@ public class Game {
     }
 
     private void moveEnemyTowardsPlayer() {
-        int[] playerPos = this.player.getPosition();
-        int[] enemyPos = this.enemy.getPosition();
+        Position playerPos = this.player.getPosition();
+        Position enemyPos = this.enemy.getPosition();
 
-        int distanceColumn = playerPos[0] - enemyPos[0];
-        int distanceRow = playerPos[1] - enemyPos[1];
+        int distanceColumn = playerPos.x() - enemyPos.x();
+        int distanceRow = playerPos.y() - enemyPos.y();
 
         if (Math.abs(distanceColumn) >= Math.abs(distanceRow)) {
             if (distanceColumn < 0)
-                enemy.moveLeft();
+                enemy.move(Direction.LEFT);
             else
-                enemy.moveRight();
+                enemy.move(Direction.RIGHT);
         } else {
             if (distanceRow < 0)
-                enemy.moveUp();
+                enemy.move(Direction.UP);
             else
-                enemy.moveDown();
+                enemy.move(Direction.DOWN);
         }
     }
 
-    private boolean pathCrossed(int[] from, int[] to, int[] other) {
-        if (Arrays.equals(to, other)) {
+    private boolean pathCrossed(Position from, Position to, Position other) {
+        if (to.equals(other)) {
             return true;
         }
 
-        if (from[1] == to[1] && other[1] == from[1]) {
-            int lo = Math.min(from[0], to[0]);
-            int hi = Math.max(from[0], to[0]);
-            return other[0] >= lo && other[0] <= hi;
+        if (from.y() == to.y() && other.y() == from.y()) {
+            int lo = Math.min(from.x(), to.x());
+            int hi = Math.max(from.x(), to.x());
+            return other.x() >= lo && other.x() <= hi;
         }
 
-        if (from[0] == to[0] && other[0] == from[0]) {
-            int lo = Math.min(from[1], to[1]);
-            int hi = Math.max(from[1], to[1]);
-            return other[1] >= lo && other[1] <= hi;
+        if (from.x() == to.x() && other.x() == from.x()) {
+            int lo = Math.min(from.y(), to.y());
+            int hi = Math.max(from.y(), to.y());
+            return other.y() >= lo && other.y() <= hi;
         }
 
         return false;
@@ -146,19 +153,19 @@ public class Game {
 
     private void listenForMoveInputs(KeyStroke key) throws IOException {
         if (key.getKeyType() == KeyType.ArrowRight) {
-            player.moveRight();
+            player.move(Direction.RIGHT);
         }
 
         if (key.getKeyType() == KeyType.ArrowLeft) {
-            player.moveLeft();
+            player.move(Direction.LEFT);
         }
 
         if (key.getKeyType() == KeyType.ArrowUp) {
-            player.moveUp();
+            player.move(Direction.UP);
         }
 
         if (key.getKeyType() == KeyType.ArrowDown) {
-            player.moveDown();
+            player.move(Direction.DOWN);
         }
     }
 
