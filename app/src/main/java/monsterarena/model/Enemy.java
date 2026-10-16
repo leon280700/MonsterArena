@@ -6,7 +6,11 @@ import lombok.Data;
 public class Enemy implements Entity {
     private String[] sprite = {"X"};
 
-    private Position position = new Position(15,15);
+    private Position position;
+
+    public Enemy(Position position) {
+        this.position = position;
+    }
 
     @Override
     public void move(Direction direction) {

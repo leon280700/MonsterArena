@@ -10,20 +10,27 @@ import monsterarena.model.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Game {
 
     Player player;
 
-    Enemy enemy;
+    ArrayList<Enemy> enemies = new ArrayList<>();
 
     ArrayList<Shot> shots = new ArrayList<>();
 
     Screen screen;
 
+    int kills;
+
+    boolean won = false;
+
     public Game() {
         this.player = new Player();
-        this.enemy = new Enemy();
+        enemies.add(new Enemy(new Position(15, 15)));
+        enemies.add(new Enemy(new Position(30, 30)));
+
         try {
             this.screen = new DefaultTerminalFactory().createScreen();
             screen.startScreen();
@@ -31,7 +38,9 @@ public class Game {
             TextGraphics g = screen.newTextGraphics();
             setGameTitle(g);
             drawSprite(g, player.getPosition(), player.getSprite());
-            drawSprite(g, enemy.getPosition(), enemy.getSprite());
+            for (Enemy enemy : enemies) {
+                drawSprite(g, enemy.getPosition(), enemy.getSprite());
+            }
 
             screen.refresh();
         } catch (IOException e) {
@@ -43,7 +52,10 @@ public class Game {
         TextGraphics g = screen.newTextGraphics();
         setGameTitle(g);
         drawSprite(g, player.getPosition(), player.getSprite());
-        drawSprite(g, enemy.getPosition(), enemy.getSprite());
+        for (int i = 0; i < enemies.size(); i++){
+            Enemy enemy = enemies.get(i);
+            drawSprite(g, enemy.getPosition(), enemy.getSprite());
+        }
         for (int i = 0; i < shots.size(); i++){
             Shot shot = shots.get(i);
             drawSprite(g, shot.getPosition(), shot.getSprite());
@@ -71,14 +83,22 @@ public class Game {
 
                 Position playerBefore = player.getPosition();
                 listenForMoveInputs(key);
-                gameOver = pathCrossed(playerBefore, player.getPosition(), enemy.getPosition());
+                for (Enemy enemy : enemies) {
+                    if (pathCrossed(playerBefore, player.getPosition(), enemy.getPosition())) {
+                        gameOver = true;
+                    }
+                }
                 listenForAttackInputs(key);
             }
 
             if (!gameOver && System.currentTimeMillis() - lastEnemyMove >= 1000) {
-                Position enemyBefore = enemy.getPosition();
-                moveEnemyTowardsPlayer();
-                gameOver = pathCrossed(enemyBefore, enemy.getPosition(), player.getPosition());
+                for (Enemy enemy : enemies) {
+                    Position enemyBefore = enemy.getPosition();
+                    moveEnemyTowardsPlayer(enemy);
+                    if (pathCrossed(enemyBefore, enemy.getPosition(), player.getPosition())) {
+                        gameOver = true;
+                    }
+                }
                 lastEnemyMove = System.currentTimeMillis();
             }
 
@@ -88,6 +108,12 @@ public class Game {
 
             shots.forEach(Shot::advance);
             shots.removeIf(Shot::isExhausted);
+            resolveShotHits();
+
+            if (enemies.isEmpty()) {
+                won = true;
+                break;
+            }
 
             render();
             Thread.sleep(16);
@@ -97,6 +123,22 @@ public class Game {
 
         } catch (IOException | InterruptedException e){
             throw new RuntimeException(e);
+        }
+    }
+
+    private void resolveShotHits() {
+        Iterator<Shot> shotIterator = shots.iterator();
+        while (shotIterator.hasNext()) {
+            Shot shot = shotIterator.next();
+            Enemy hitEnemy = enemies.stream()
+                    .filter(enemy -> enemy.getPosition().equals(shot.getPosition()))
+                    .findFirst()
+                    .orElse(null);
+            if (hitEnemy != null) {
+                enemies.remove(hitEnemy);
+                shotIterator.remove();
+                kills++;
+            }
         }
     }
 
@@ -120,9 +162,9 @@ public class Game {
         setEndScreenTitle(g);
     }
 
-    private void moveEnemyTowardsPlayer() {
+    private void moveEnemyTowardsPlayer(Enemy enemy) {
         Position playerPos = this.player.getPosition();
-        Position enemyPos = this.enemy.getPosition();
+        Position enemyPos = enemy.getPosition();
 
         int distanceColumn = playerPos.x() - enemyPos.x();
         int distanceRow = playerPos.y() - enemyPos.y();
@@ -191,6 +233,7 @@ public class Game {
     private void setEndScreenTitle(TextGraphics g) {
         g.setForegroundColor(TextColor.ANSI.YELLOW);
         g.putString(2, 1, "GAME OVER – Druecke 'q' oder ESC zum Beenden.");
+        g.putString(2, 2, "Kills: " + String.valueOf(kills));
         try {
             screen.refresh();
         } catch (IOException e) {
