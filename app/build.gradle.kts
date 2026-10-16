@@ -25,7 +25,7 @@ java {
 }
 
 application {
-    mainClass = "roguelike.App"
+    mainClass = "monsterarena.App"
     applicationName = "tuigame"
 }
 

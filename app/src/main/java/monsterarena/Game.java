@@ -6,18 +6,18 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import monsterarena.model.Direction;
-import monsterarena.model.Enemy;
-import monsterarena.model.Player;
-import monsterarena.model.Position;
+import monsterarena.model.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Game {
 
     Player player;
 
     Enemy enemy;
+
+    ArrayList<Shot> shots = new ArrayList<>();
 
     Screen screen;
 
@@ -44,7 +44,10 @@ public class Game {
         setGameTitle(g);
         drawSprite(g, player.getPosition(), player.getSprite());
         drawSprite(g, enemy.getPosition(), enemy.getSprite());
-
+        for (int i = 0; i < shots.size(); i++){
+            Shot shot = shots.get(i);
+            drawSprite(g, shot.getPosition(), shot.getSprite());
+        }
         screen.refresh();
     }
 
@@ -69,6 +72,7 @@ public class Game {
                 Position playerBefore = player.getPosition();
                 listenForMoveInputs(key);
                 gameOver = pathCrossed(playerBefore, player.getPosition(), enemy.getPosition());
+                listenForAttackInputs(key);
             }
 
             if (!gameOver && System.currentTimeMillis() - lastEnemyMove >= 1000) {
@@ -82,6 +86,9 @@ public class Game {
                 break;
             }
 
+            shots.forEach(Shot::advance);
+            shots.removeIf(Shot::isExhausted);
+
             render();
             Thread.sleep(16);
         }
@@ -90,6 +97,13 @@ public class Game {
 
         } catch (IOException | InterruptedException e){
             throw new RuntimeException(e);
+        }
+    }
+
+    private void listenForAttackInputs(KeyStroke key) {
+        if (key.getKeyType() == KeyType.Tab) {
+            Shot shot = player.attack();
+            shots.add(shot);
         }
     }
 

@@ -3,6 +3,7 @@ package monsterarena.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ public class Player implements Entity {
 
     private Position position = new Position(3,2);
 
+    private Direction facing = Direction.DOWN;
+
     public Player() {
         sprites.put(Direction.UP, "^");
         sprites.put(Direction.DOWN, "v");
@@ -25,9 +28,10 @@ public class Player implements Entity {
     public void move(Direction direction) {
         this.setPosition(new Position(position.x() + direction.getDx(), position.y() + direction.getDy()));
         this.setSprite(new String[]{direction.getSymbol()});
+        this.setFacing(direction);
     }
 
-    public void attack() {
-        // TODO
+    public Shot attack() {
+        return new Shot(position, facing);
     }
 }
