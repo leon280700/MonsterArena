@@ -14,7 +14,7 @@ public class Player implements Entity {
 
     private Map<Direction, String> sprites = new HashMap<>();
 
-    private Position position = new Position(3,2);
+    private Position position = new Position(20,20);
 
     private Direction facing = Direction.DOWN;
 

@@ -16,6 +16,8 @@ public class Game {
 
     Player player;
 
+    Map map;
+
     ArrayList<Enemy> enemies = new ArrayList<>();
 
     ArrayList<Shot> shots = new ArrayList<>();
@@ -28,6 +30,8 @@ public class Game {
 
     public Game() {
         this.player = new Player();
+        this.map = new Map();
+
         enemies.add(new Enemy(new Position(15, 15)));
         enemies.add(new Enemy(new Position(30, 30)));
 
@@ -38,6 +42,9 @@ public class Game {
             TextGraphics g = screen.newTextGraphics();
             setGameTitle(g);
             drawSprite(g, player.getPosition(), player.getSprite());
+
+            drawMapSprite(g);
+
             for (Enemy enemy : enemies) {
                 drawSprite(g, enemy.getPosition(), enemy.getSprite());
             }
@@ -52,12 +59,13 @@ public class Game {
         TextGraphics g = screen.newTextGraphics();
         setGameTitle(g);
         drawSprite(g, player.getPosition(), player.getSprite());
-        for (int i = 0; i < enemies.size(); i++){
-            Enemy enemy = enemies.get(i);
+
+        drawMapSprite(g);
+
+        for (Enemy enemy : enemies) {
             drawSprite(g, enemy.getPosition(), enemy.getSprite());
         }
-        for (int i = 0; i < shots.size(); i++){
-            Shot shot = shots.get(i);
+        for (Shot shot : shots) {
             drawSprite(g, shot.getPosition(), shot.getSprite());
         }
         screen.refresh();
@@ -66,6 +74,22 @@ public class Game {
     private void drawSprite(TextGraphics g, Position position, String[] sprite) {
         for (int row = 0; row < sprite.length; row++) {
             g.putString(position.x(), position.y() + row, sprite[row]);
+        }
+    }
+
+    private void drawMapSprite(TextGraphics g) {
+        int mapXStart = map.getStart().x();
+        int mapXEnd = map.getEnd().x();
+        for (int x = mapXStart; x <= mapXEnd; x++){
+            drawSprite(g, new Position(x, map.getStart().y()), map.getRowSprite());
+            drawSprite(g, new Position(x, map.getEnd().y()), map.getRowSprite());
+        }
+
+        int mapYStart = map.getStart().y();
+        int mapYEnd = map.getEnd().y();
+        for (int y = mapYStart; y <= mapYEnd; y++){
+            drawSprite(g, new Position(map.getStart().x(), y), map.getColumnSprite());
+            drawSprite(g, new Position(map.getEnd().x(), y), map.getColumnSprite());
         }
     }
 
@@ -209,19 +233,25 @@ public class Game {
 
     private void listenForMoveInputs(KeyStroke key) throws IOException {
         if (key.getKeyType() == KeyType.ArrowRight) {
-            player.move(Direction.RIGHT);
+            walkOrDeny(Direction.RIGHT);
         }
 
         if (key.getKeyType() == KeyType.ArrowLeft) {
-            player.move(Direction.LEFT);
+            walkOrDeny(Direction.LEFT);
         }
 
         if (key.getKeyType() == KeyType.ArrowUp) {
-            player.move(Direction.UP);
+            walkOrDeny(Direction.UP);
         }
 
         if (key.getKeyType() == KeyType.ArrowDown) {
-            player.move(Direction.DOWN);
+            walkOrDeny(Direction.DOWN);
+        }
+    }
+
+    private void walkOrDeny(Direction direction){
+        if (isWalkable(direction)){
+            player.move(direction);
         }
     }
 
@@ -239,5 +269,15 @@ public class Game {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean isWalkable(Direction direction){
+        Position prevPlayerPos = player.getPosition();
+
+        player.move(direction);
+        Position nextPlayerPos = player.getPosition();
+        player.setPosition(prevPlayerPos);
+
+        return map.isPositionInside(nextPlayerPos);
     }
 }
