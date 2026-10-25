@@ -23,6 +23,8 @@ public class Game {
 
     ArrayList<Shot> shots = new ArrayList<>();
 
+    HighScore highScore;
+
     Screen screen;
 
     int level = 1;
@@ -31,9 +33,10 @@ public class Game {
 
     boolean gameOver = false;
 
-    public Game() {
+    public Game() throws IOException {
         this.player = new Player();
         this.map = new Map();
+        this.highScore = new HighScore();
 
         try {
             this.screen = new DefaultTerminalFactory().createScreen();
@@ -208,7 +211,23 @@ public class Game {
     private void endScreen() {
         screen.clear();
         TextGraphics g = screen.newTextGraphics();
-        setEndScreenTitle(g);
+        setHighScores(g);
+
+        ArrayList<String> scoreLines = highScore.getScoreLines();
+
+        int x = 5;
+        g.putString(2, x, "Highscores");
+        for (String s : scoreLines) {
+            x++;
+            g.putString(2, x, s);
+        }
+
+
+        try {
+            screen.refresh();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void moveEnemyTowardsPlayer(Enemy enemy) {
@@ -285,15 +304,11 @@ public class Game {
         g.putString(2, 1, "TUIGame – Druecke 'q' oder ESC zum Beenden.");
         g.setForegroundColor(TextColor.ANSI.WHITE);
     }
-    private void setEndScreenTitle(TextGraphics g) {
+    private void setHighScores(TextGraphics g) {
         g.setForegroundColor(TextColor.ANSI.YELLOW);
         g.putString(2, 1, "GAME OVER – Druecke 'q' oder ESC zum Beenden.");
-        g.putString(2, 2, "Kills: " + String.valueOf(kills));
-        try {
-            screen.refresh();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        highScore.writeToHighScore("TempName", kills, Difficulty.EASY);
     }
 
     private boolean isWalkable(Direction direction){
