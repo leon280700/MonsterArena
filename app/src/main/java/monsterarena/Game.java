@@ -11,6 +11,7 @@ import monsterarena.model.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Random;
 
 public class Game {
 
@@ -24,32 +25,21 @@ public class Game {
 
     Screen screen;
 
+    int level = 1;
+
     int kills;
 
-    boolean won = false;
+    boolean gameOver = false;
 
     public Game() {
         this.player = new Player();
         this.map = new Map();
 
-        enemies.add(new Enemy(new Position(15, 15)));
-        enemies.add(new Enemy(new Position(30, 30)));
-
         try {
             this.screen = new DefaultTerminalFactory().createScreen();
             screen.startScreen();
             screen.setCursorPosition(null);
-            TextGraphics g = screen.newTextGraphics();
-            setGameTitle(g);
-            drawSprite(g, player.getPosition(), player.getSprite());
-
-            drawMapSprite(g);
-
-            for (Enemy enemy : enemies) {
-                drawSprite(g, enemy.getPosition(), enemy.getSprite());
-            }
-
-            screen.refresh();
+           render();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -97,7 +87,13 @@ public class Game {
     public void startGameLoop(){
         try {
             long lastEnemyMove = System.currentTimeMillis();
+            int spawnedLevel = -1;
+
         while (true) {
+            if (spawnedLevel != level) {
+                spawnEnemies();
+                spawnedLevel = level;
+            }
             KeyStroke key = screen.pollInput();
 
             boolean gameOver = false;
@@ -115,7 +111,7 @@ public class Game {
                 listenForAttackInputs(key);
             }
 
-            if (!gameOver && System.currentTimeMillis() - lastEnemyMove >= 1000) {
+            if (!gameOver && System.currentTimeMillis() - lastEnemyMove >= 500) {
                 for (Enemy enemy : enemies) {
                     Position enemyBefore = enemy.getPosition();
                     moveEnemyTowardsPlayer(enemy);
@@ -135,8 +131,7 @@ public class Game {
             resolveShotHits();
 
             if (enemies.isEmpty()) {
-                won = true;
-                break;
+                level++;
             }
 
             render();
@@ -148,6 +143,36 @@ public class Game {
         } catch (IOException | InterruptedException e){
             throw new RuntimeException(e);
         }
+    }
+
+    private void spawnEnemies() {
+        for (int i = 1; i <= level; i++) {
+            Position position = generateRandomPositionInsideMapWithDistanceToPlayer();
+            enemies.add(new Enemy(position));
+        }
+    }
+
+    private Position generateRandomPositionInsideMapWithDistanceToPlayer() {
+        Random r = new Random();
+
+        int minX = map.getStart().x()+1;
+        int maxX = map.getEnd().x()-1;
+        int minY = map.getStart().y()+1;
+        int maxY = map.getEnd().y()-1;
+
+        Position playerPosition = player.getPosition();
+
+        int x, y;
+
+        do {
+            x = r.nextInt((maxX - minX) + 1) + minX;
+            y = r.nextInt((maxY - minY) + 1) + minY;
+        } while (
+                Math.abs(x - playerPosition.x()) < 5 ||
+                        Math.abs(y - playerPosition.y()) < 5
+        );
+
+        return new Position(x, y);
     }
 
     private void resolveShotHits() {
