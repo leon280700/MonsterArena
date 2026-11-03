@@ -5,6 +5,7 @@ import com.googlecode.lanterna.graphics.TextGraphics;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
+import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import monsterarena.model.*;
 
@@ -48,41 +49,44 @@ public class Game {
         }
     }
     private void render() throws IOException {
+        screen.doResizeIfNecessary();
         screen.clear();
         TextGraphics g = screen.newTextGraphics();
-        setGameTitle(g);
-        drawSprite(g, player.getPosition(), player.getSprite());
+        Offset offset = computeOffset(screen.getTerminalSize());
 
-        drawMapSprite(g);
+        setGameTitle(g);
+        drawSprite(g, player.getPosition(), player.getSprite(), offset);
+
+        drawMapSprite(g, offset);
 
         for (Enemy enemy : enemies) {
-            drawSprite(g, enemy.getPosition(), enemy.getSprite());
+            drawSprite(g, enemy.getPosition(), enemy.getSprite(), offset);
         }
         for (Shot shot : shots) {
-            drawSprite(g, shot.getPosition(), shot.getSprite());
+            drawSprite(g, shot.getPosition(), shot.getSprite(), offset);
         }
         screen.refresh();
     }
 
-    private void drawSprite(TextGraphics g, Position position, String[] sprite) {
+    private void drawSprite(TextGraphics g, Position position, String[] sprite, Offset offset) {
         for (int row = 0; row < sprite.length; row++) {
-            g.putString(position.x(), position.y() + row, sprite[row]);
+            g.putString(position.x() + offset.x(), position.y() + row + offset.y(), sprite[row]);
         }
     }
 
-    private void drawMapSprite(TextGraphics g) {
+    private void drawMapSprite(TextGraphics g, Offset offset) {
         int mapXStart = map.getStart().x();
         int mapXEnd = map.getEnd().x();
         for (int x = mapXStart; x <= mapXEnd; x++){
-            drawSprite(g, new Position(x, map.getStart().y()), map.getRowSprite());
-            drawSprite(g, new Position(x, map.getEnd().y()), map.getRowSprite());
+            drawSprite(g, new Position(x, map.getStart().y()), map.getRowSprite(), offset);
+            drawSprite(g, new Position(x, map.getEnd().y()), map.getRowSprite(), offset);
         }
 
         int mapYStart = map.getStart().y();
         int mapYEnd = map.getEnd().y();
         for (int y = mapYStart; y <= mapYEnd; y++){
-            drawSprite(g, new Position(map.getStart().x(), y), map.getColumnSprite());
-            drawSprite(g, new Position(map.getEnd().x(), y), map.getColumnSprite());
+            drawSprite(g, new Position(map.getStart().x(), y), map.getColumnSprite(), offset);
+            drawSprite(g, new Position(map.getEnd().x(), y), map.getColumnSprite(), offset);
         }
     }
 
@@ -319,5 +323,17 @@ public class Game {
         player.setPosition(prevPlayerPos);
 
         return map.isPositionInside(nextPlayerPos);
+    }
+
+    private record Offset(int x, int y) {}
+
+    private Offset computeOffset(TerminalSize terminalSize) {
+        int mapWidth = map.getEnd().x() - map.getStart().x();
+        int mapHeight = map.getEnd().y() - map.getStart().y();
+
+        int desiredLeft = Math.max(0, (terminalSize.getColumns() - mapWidth) / 2);
+        int desiredTop = Math.max(0, (terminalSize.getRows() - mapHeight) / 2);
+
+        return new Offset(desiredLeft - map.getStart().x(), desiredTop - map.getStart().y());
     }
 }
