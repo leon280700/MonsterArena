@@ -1,2 +1,2 @@
-Leon;30;HARD
-TempName;3;EASY
+TempName;6;Klein
+TempName;3;Klein

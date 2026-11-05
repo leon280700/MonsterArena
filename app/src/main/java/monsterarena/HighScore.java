@@ -2,6 +2,7 @@ package monsterarena;
 
 import lombok.Getter;
 import monsterarena.model.Difficulty;
+import monsterarena.model.MapSize;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,19 +12,19 @@ import java.util.List;
 @Getter
 public class HighScore {
 
-    private record HighScoreEntry(String name, int kills, Difficulty difficulty){
+    private record HighScoreEntry(String name, int kills, String mapSize){
 
         public static HighScoreEntry parse(String line){
             String[] values = line.split(";");
-            return new HighScoreEntry(values[0], Integer.parseInt(values[1]), Difficulty.valueOf(values[2]));
+            return new HighScoreEntry(values[0], Integer.parseInt(values[1]), String.valueOf(values[2]));
         }
 
         String toLine() {
-            return name + ";" + kills + ";" + difficulty.name();
+            return name + ";" + kills + ";" + mapSize;
         }
 
         String toReadableLine() {
-            return name + "         " + kills + "           " + difficulty.name();
+            return name + "         " + kills + "           " + mapSize;
 
         }
 
@@ -49,8 +50,8 @@ public class HighScore {
         }
     }
 
-    public void writeToHighScore(String playerName, int kills, Difficulty difficulty) {
-        entries.add(new HighScoreEntry(playerName, kills, difficulty));
+    public void writeToHighScore(String playerName, int kills, String mapSize) {
+        entries.add(new HighScoreEntry(playerName, kills, mapSize));
 
         entries.sort(Comparator.comparingInt(HighScoreEntry::kills).reversed());
 

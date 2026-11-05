@@ -14,11 +14,12 @@ public class Player implements Entity {
 
     private Map<Direction, String> sprites = new HashMap<>();
 
-    private Position position = new Position(20,20);
+    private Position position;
 
     private Direction facing = Direction.DOWN;
 
-    public Player() {
+    public Player(Position position) {
+        this.position = position;
         sprites.put(Direction.UP, "^");
         sprites.put(Direction.DOWN, "v");
         sprites.put(Direction.LEFT, "<");

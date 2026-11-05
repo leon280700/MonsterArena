@@ -32,15 +32,15 @@ public class Game {
 
     int kills;
 
-    boolean gameOver = false;
+    private static final int MAX_KEYS_PER_TICK = 64;
 
-    public Game() throws IOException {
-        this.player = new Player();
-        this.map = new Map();
+    public Game(Screen screen, MapSize mapSize) throws IOException {
+        this.map = new Map(mapSize);
+        this.player = new Player(map.getCentre());
         this.highScore = new HighScore();
+        this.screen = screen;
 
         try {
-            this.screen = new DefaultTerminalFactory().createScreen();
             screen.startScreen();
             screen.setCursorPosition(null);
            render();
@@ -48,6 +48,7 @@ public class Game {
             throw new RuntimeException(e);
         }
     }
+
     private void render() throws IOException {
         screen.doResizeIfNecessary();
         screen.clear();
@@ -129,9 +130,8 @@ public class Game {
                 lastEnemyMove = System.currentTimeMillis();
             }
 
-            if (gameOver) {
-                break;
-            }
+            if (gameOver) break;
+
 
             shots.forEach(Shot::advance);
             shots.removeIf(Shot::isExhausted);
@@ -312,7 +312,7 @@ public class Game {
         g.setForegroundColor(TextColor.ANSI.YELLOW);
         g.putString(2, 1, "GAME OVER – Druecke 'q' oder ESC zum Beenden.");
 
-        highScore.writeToHighScore("TempName", kills, Difficulty.EASY);
+        highScore.writeToHighScore("TempName", kills, map.getMapSize().getText());
     }
 
     private boolean isWalkable(Direction direction){
@@ -328,11 +328,8 @@ public class Game {
     private record Offset(int x, int y) {}
 
     private Offset computeOffset(TerminalSize terminalSize) {
-        int mapWidth = map.getEnd().x() - map.getStart().x();
-        int mapHeight = map.getEnd().y() - map.getStart().y();
-
-        int desiredLeft = Math.max(0, (terminalSize.getColumns() - mapWidth) / 2);
-        int desiredTop = Math.max(0, (terminalSize.getRows() - mapHeight) / 2);
+        int desiredLeft = Math.max(0, (terminalSize.getColumns() - map.getMapSize().getWidth()) / 2);
+        int desiredTop = Math.max(0, (terminalSize.getRows() - map.getMapSize().getHeight()) / 2);
 
         return new Offset(desiredLeft - map.getStart().x(), desiredTop - map.getStart().y());
     }
