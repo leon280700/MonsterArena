@@ -4,6 +4,7 @@ import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.graphics.SimpleTheme;
 import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.screen.Screen;
+import monsterarena.model.GameSettings;
 import monsterarena.model.MapSize;
 
 import java.util.List;
@@ -12,9 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class StartScreen {
 
-    public record InitialData(String playerName, MapSize mapSize, boolean closeGame) {}
-
-    public static InitialData show(Screen screen, SimpleTheme theme, GridLayout layout) {
+    public static GameSettings show(Screen screen, SimpleTheme theme, GridLayout layout) {
         AtomicBoolean closeGame = new AtomicBoolean(false);
         MultiWindowTextGUI gui = new MultiWindowTextGUI(screen);
         gui.setTheme(theme);
@@ -55,6 +54,6 @@ public class StartScreen {
         gui.addWindowAndWait(window);
         String playerName = textBox.getText();
 
-        return new InitialData(playerName, selectedMapSize.get(), closeGame.get());
+        return new GameSettings(playerName, selectedMapSize.get(), closeGame.get());
     }
 }

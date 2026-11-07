@@ -20,12 +20,6 @@ public class HighScore {
         String toLine() {
             return playerName + ";" + kills + ";" + mapSize;
         }
-
-        String toReadableLine() {
-            return playerName + "         " + kills + "           " + mapSize;
-
-        }
-
     }
 
     private List<HighScoreEntry> entries = new ArrayList<>();
@@ -46,6 +40,7 @@ public class HighScore {
                 e.printStackTrace();
             }
         }
+        reader.close();
     }
 
     public void writeToHighScore(String playerName, int kills, String mapSize) {
@@ -71,11 +66,4 @@ public class HighScore {
         }
     }
 
-    public ArrayList<String> getScoreLines() {
-        ArrayList<String> scoreLines = new ArrayList<>();
-        for (HighScoreEntry hse : entries) {
-            scoreLines.add(hse.toReadableLine());
-        }
-        return scoreLines;
-    }
 }

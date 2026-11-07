@@ -12,8 +12,6 @@ import java.util.Map;
 public class Player implements Entity {
     private String[] sprite = {"v"};
 
-    private Map<Direction, String> sprites = new HashMap<>();
-
     private Position position;
 
     private String playerName;
@@ -23,10 +21,6 @@ public class Player implements Entity {
     public Player(Position position, String playerName) {
         this.position = position;
         this.playerName = playerName;
-        sprites.put(Direction.UP, "^");
-        sprites.put(Direction.DOWN, "v");
-        sprites.put(Direction.LEFT, "<");
-        sprites.put(Direction.RIGHT, ">");
     }
     @Override
     public void move(Direction direction) {

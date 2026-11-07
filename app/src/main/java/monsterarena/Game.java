@@ -7,7 +7,6 @@ import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.TerminalSize;
 import monsterarena.model.*;
-import monsterarena.ui.StartScreen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ public class Game {
 
     Player player;
 
-    Map map;
+    GameMap gameMap;
 
     ArrayList<Enemy> enemies = new ArrayList<>();
 
@@ -32,9 +31,9 @@ public class Game {
 
     int kills;
 
-    public Game(Screen screen, StartScreen.InitialData initialData) throws IOException {
-        this.map = new Map(initialData.mapSize());
-        this.player = new Player(map.getCentre(), initialData.playerName());
+    public Game(Screen screen, GameSettings initialData) throws IOException {
+        this.gameMap = new GameMap(initialData.mapSize());
+        this.player = new Player(gameMap.getCentre(), initialData.playerName());
         this.highScore = new HighScore();
         this.screen = screen;
 
@@ -74,18 +73,18 @@ public class Game {
     }
 
     private void drawMapSprite(TextGraphics g, Offset offset) {
-        int mapXStart = map.getStart().x();
-        int mapXEnd = map.getEnd().x();
+        int mapXStart = gameMap.getStart().x();
+        int mapXEnd = gameMap.getEnd().x();
         for (int x = mapXStart; x <= mapXEnd; x++){
-            drawSprite(g, new Position(x, map.getStart().y()), map.getRowSprite(), offset);
-            drawSprite(g, new Position(x, map.getEnd().y()), map.getRowSprite(), offset);
+            drawSprite(g, new Position(x, gameMap.getStart().y()), gameMap.getRowSprite(), offset);
+            drawSprite(g, new Position(x, gameMap.getEnd().y()), gameMap.getRowSprite(), offset);
         }
 
-        int mapYStart = map.getStart().y();
-        int mapYEnd = map.getEnd().y();
+        int mapYStart = gameMap.getStart().y();
+        int mapYEnd = gameMap.getEnd().y();
         for (int y = mapYStart; y <= mapYEnd; y++){
-            drawSprite(g, new Position(map.getStart().x(), y), map.getColumnSprite(), offset);
-            drawSprite(g, new Position(map.getEnd().x(), y), map.getColumnSprite(), offset);
+            drawSprite(g, new Position(gameMap.getStart().x(), y), gameMap.getColumnSprite(), offset);
+            drawSprite(g, new Position(gameMap.getEnd().x(), y), gameMap.getColumnSprite(), offset);
         }
     }
 
@@ -105,16 +104,16 @@ public class Game {
             boolean gameOver = false;
 
             if (key != null) {
-                if (listenForExitInputs(key)) break;
+                if (reactOnExitInputs(key)) break;
 
                 Position playerBefore = player.getPosition();
-                listenForMoveInputs(key);
+                reactOnMoveInputs(key);
                 for (Enemy enemy : enemies) {
                     if (pathCrossed(playerBefore, player.getPosition(), enemy.getPosition())) {
                         gameOver = true;
                     }
                 }
-                listenForAttackInputs(key);
+                reactOnAttackInputs(key);
             }
 
             if (!gameOver && System.currentTimeMillis() - lastEnemyMove >= 500) {
@@ -146,7 +145,7 @@ public class Game {
         } catch (IOException | InterruptedException e){
             throw new RuntimeException(e);
         }
-        highScore.writeToHighScore(player.getPlayerName(), kills, map.getMapSize().getText());
+        highScore.writeToHighScore(player.getPlayerName(), kills, gameMap.getMapSize().getText());
 
         return highScore;
     }
@@ -161,10 +160,10 @@ public class Game {
     private Position generateRandomPositionInsideMapWithDistanceToPlayer() {
         Random r = new Random();
 
-        int minX = map.getStart().x()+1;
-        int maxX = map.getEnd().x()-1;
-        int minY = map.getStart().y()+1;
-        int maxY = map.getEnd().y()-1;
+        int minX = gameMap.getStart().x()+1;
+        int maxX = gameMap.getEnd().x()-1;
+        int minY = gameMap.getStart().y()+1;
+        int maxY = gameMap.getEnd().y()-1;
 
         Position playerPosition = player.getPosition();
 
@@ -197,7 +196,7 @@ public class Game {
         }
     }
 
-    private void listenForAttackInputs(KeyStroke key) {
+    private void reactOnAttackInputs(KeyStroke key) {
         if (key.getKeyType() == KeyType.Tab) {
             Shot shot = player.attack();
             shots.add(shot);
@@ -244,12 +243,12 @@ public class Game {
         return false;
     }
 
-    private static boolean listenForExitInputs(KeyStroke key) {
+    private static boolean reactOnExitInputs(KeyStroke key) {
         return key.getKeyType() == KeyType.Escape || key.getKeyType() == KeyType.EOF
                 || (key.getKeyType() == KeyType.Character && key.getCharacter() == 'q');
     }
 
-    private void listenForMoveInputs(KeyStroke key) throws IOException {
+    private void reactOnMoveInputs(KeyStroke key) {
         if (key.getKeyType() == KeyType.ArrowRight) {
             walkOrDeny(Direction.RIGHT);
         }
@@ -275,7 +274,10 @@ public class Game {
 
     private void setGameTitle(TextGraphics g) {
         g.setForegroundColor(TextColor.ANSI.YELLOW);
-        g.putString(2, 1, "TUIGame – Druecke 'q' oder ESC zum Beenden.");
+        g.putString(2, 1, "Drücke 'q' oder ESC zum Beenden.");
+        g.putString(2, 2, "Bewegen mit Pfeiltasten.");
+        g.putString(2, 3, "Schiessen mit Tab.");
+
         g.setForegroundColor(TextColor.ANSI.WHITE);
     }
 
@@ -287,15 +289,15 @@ public class Game {
         Position nextPlayerPos = player.getPosition();
         player.setPosition(prevPlayerPos);
 
-        return map.isPositionInside(nextPlayerPos);
+        return gameMap.isPositionInside(nextPlayerPos);
     }
 
     private record Offset(int x, int y) {}
 
     private Offset computeOffset(TerminalSize terminalSize) {
-        int desiredLeft = Math.max(0, (terminalSize.getColumns() - map.getMapSize().getWidth()) / 2);
-        int desiredTop = Math.max(0, (terminalSize.getRows() - map.getMapSize().getHeight()) / 2);
+        int desiredLeft = Math.max(0, (terminalSize.getColumns() - gameMap.getMapSize().getWidth()) / 2);
+        int desiredTop = Math.max(0, (terminalSize.getRows() - gameMap.getMapSize().getHeight()) / 2);
 
-        return new Offset(desiredLeft - map.getStart().x(), desiredTop - map.getStart().y());
+        return new Offset(desiredLeft - gameMap.getStart().x(), desiredTop - gameMap.getStart().y());
     }
 }

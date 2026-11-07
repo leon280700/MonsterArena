@@ -2,6 +2,7 @@ package monsterarena;
 
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import monsterarena.model.GameSettings;
 import monsterarena.ui.EndScreen;
 import monsterarena.ui.Layout;
 import monsterarena.ui.StartScreen;
@@ -19,13 +20,13 @@ public class App {
         screen.startScreen();
 
         do {
-        StartScreen.InitialData initialData = StartScreen.show(screen, theme.getTheme(), layout.getLayout());
-        if (initialData.mapSize() == null || initialData.playerName() == null || initialData.closeGame()) {
+        GameSettings gameSettings = StartScreen.show(screen, theme.getTheme(), layout.getLayout());
+        if (gameSettings.mapSize() == null || gameSettings.playerName() == null || gameSettings.closeGame()) {
             screen.stopScreen();
             return;
         }
 
-        Game game = new Game(screen, initialData);
+        Game game = new Game(screen, gameSettings);
         HighScore highScore = game.startGameLoop();
 
         restart = EndScreen.show(screen, theme.getTheme(), layout.getLayout(), highScore);

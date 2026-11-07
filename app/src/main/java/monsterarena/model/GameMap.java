@@ -3,7 +3,7 @@ package monsterarena.model;
 import lombok.Data;
 
 @Data
-public class Map {
+public class GameMap {
 
     private String[] rowSprite = new String[]{"–"};
 
@@ -15,7 +15,7 @@ public class Map {
 
     private Position end;
 
-    public Map(MapSize mapSize) {
+    public GameMap(MapSize mapSize) {
         this.mapSize = mapSize;
 
         this.start = new Position(0, 0);
