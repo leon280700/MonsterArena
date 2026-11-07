@@ -6,7 +6,6 @@ import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import monsterarena.model.*;
 import monsterarena.ui.StartScreen;
 
@@ -32,8 +31,6 @@ public class Game {
     int level = 1;
 
     int kills;
-
-    private static final int MAX_KEYS_PER_TICK = 64;
 
     public Game(Screen screen, StartScreen.InitialData initialData) throws IOException {
         this.map = new Map(initialData.mapSize());
@@ -93,7 +90,7 @@ public class Game {
     }
 
 
-    public void startGameLoop(){
+    public HighScore startGameLoop(){
         try {
             long lastEnemyMove = System.currentTimeMillis();
             int spawnedLevel = -1;
@@ -145,12 +142,13 @@ public class Game {
             render();
             Thread.sleep(16);
         }
-            endScreen();
-            waitForExit();
 
         } catch (IOException | InterruptedException e){
             throw new RuntimeException(e);
         }
+        highScore.writeToHighScore(player.getPlayerName(), kills, map.getMapSize().getText());
+
+        return highScore;
     }
 
     private void spawnEnemies() {
@@ -203,35 +201,6 @@ public class Game {
         if (key.getKeyType() == KeyType.Tab) {
             Shot shot = player.attack();
             shots.add(shot);
-        }
-    }
-
-    private void waitForExit() throws IOException {
-        while (true) {
-            KeyStroke key = screen.readInput();
-            if (listenForExitInputs(key)) break;
-        }
-    }
-
-    private void endScreen() {
-        screen.clear();
-        TextGraphics g = screen.newTextGraphics();
-        setHighScores(g);
-
-        ArrayList<String> scoreLines = highScore.getScoreLines();
-
-        int x = 5;
-        g.putString(2, x, "Highscores");
-        for (String s : scoreLines) {
-            x++;
-            g.putString(2, x, s);
-        }
-
-
-        try {
-            screen.refresh();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -309,12 +278,7 @@ public class Game {
         g.putString(2, 1, "TUIGame – Druecke 'q' oder ESC zum Beenden.");
         g.setForegroundColor(TextColor.ANSI.WHITE);
     }
-    private void setHighScores(TextGraphics g) {
-        g.setForegroundColor(TextColor.ANSI.YELLOW);
-        g.putString(2, 1, "GAME OVER – Druecke 'q' oder ESC zum Beenden.");
 
-        highScore.writeToHighScore(player.getPlayerName(), kills, map.getMapSize().getText());
-    }
 
     private boolean isWalkable(Direction direction){
         Position prevPlayerPos = player.getPosition();

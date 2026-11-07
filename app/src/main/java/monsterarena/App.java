@@ -2,22 +2,33 @@ package monsterarena;
 
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
+import monsterarena.ui.EndScreen;
+import monsterarena.ui.Layout;
 import monsterarena.ui.StartScreen;
+import monsterarena.ui.Theme;
 
 import java.io.IOException;
 
 public class App {
     public static void main(String[] args) throws IOException {
         Screen screen = new DefaultTerminalFactory().createScreen();
+        Theme theme = new Theme();
+        Layout layout = new Layout();
+        boolean restart;
+
         screen.startScreen();
 
-        StartScreen.InitialData initialData = StartScreen.show(screen);
-        if (initialData.mapSize() == null || initialData.playerName() == null) {
+        do {
+        StartScreen.InitialData initialData = StartScreen.show(screen, theme.getTheme(), layout.getLayout());
+        if (initialData.mapSize() == null || initialData.playerName() == null || initialData.closeGame()) {
             screen.stopScreen();
             return;
         }
 
         Game game = new Game(screen, initialData);
-        game.startGameLoop();
+        HighScore highScore = game.startGameLoop();
+
+        restart = EndScreen.show(screen, theme.getTheme(), layout.getLayout(), highScore);
+        } while(restart);
     }
 }
