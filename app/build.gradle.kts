@@ -26,7 +26,7 @@ java {
 
 application {
     mainClass = "monsterarena.App"
-    applicationName = "tuigame"
+    applicationName = "monsterarena"
 }
 
 tasks.named<Test>("test") {
