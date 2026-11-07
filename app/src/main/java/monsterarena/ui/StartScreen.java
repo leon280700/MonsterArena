@@ -1,14 +1,6 @@
 package monsterarena.ui;
 
-import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.Button;
-import com.googlecode.lanterna.gui2.Direction;
-import com.googlecode.lanterna.gui2.Label;
-import com.googlecode.lanterna.gui2.LinearLayout;
-import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
-import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.RadioBoxList;
-import com.googlecode.lanterna.gui2.Window;
+import com.googlecode.lanterna.gui2.*;
 import com.googlecode.lanterna.screen.Screen;
 import monsterarena.model.MapSize;
 
@@ -18,10 +10,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class StartScreen {
 
-    public static MapSize show(Screen screen) throws IOException {
+    public record InitialData(String playerName, MapSize mapSize) {}
+
+    public static InitialData show(Screen screen) throws IOException {
         MultiWindowTextGUI gui = new MultiWindowTextGUI(screen);
 
-        BasicWindow window = new BasicWindow("TUIGame");
+        BasicWindow window = new BasicWindow("Monster Arena");
         window.setHints(List.of(Window.Hint.CENTERED));
 
         AtomicReference<MapSize> selectedMapSize = new AtomicReference<>();
@@ -29,9 +23,13 @@ public class StartScreen {
         Panel panel = new Panel();
         panel.setLayoutManager(new LinearLayout(Direction.VERTICAL));
 
-        panel.addComponent(new Label("TUIGame"));
-        panel.addComponent(new Label("Kartengröße wählen:"));
+        panel.addComponent(new Label("Monster Arena"));
 
+        panel.addComponent(new Label("Namen eingeben:"));
+        TextBox textBox = new TextBox();
+        panel.addComponent(textBox);
+
+        panel.addComponent(new Label("Kartengröße wählen:"));
         RadioBoxList<MapSize> mapSizeList = new RadioBoxList<>();
         for (MapSize mapSize : MapSize.values()) {
             mapSizeList.addItem(mapSize);
@@ -46,7 +44,8 @@ public class StartScreen {
 
         window.setComponent(panel);
         gui.addWindowAndWait(window);
+        String playerName = textBox.getText();
 
-        return selectedMapSize.get();
+        return new InitialData(playerName, selectedMapSize.get());
     }
 }

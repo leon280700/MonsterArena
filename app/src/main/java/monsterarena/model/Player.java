@@ -16,10 +16,13 @@ public class Player implements Entity {
 
     private Position position;
 
+    private String playerName;
+
     private Direction facing = Direction.DOWN;
 
-    public Player(Position position) {
+    public Player(Position position, String playerName) {
         this.position = position;
+        this.playerName = playerName;
         sprites.put(Direction.UP, "^");
         sprites.put(Direction.DOWN, "v");
         sprites.put(Direction.LEFT, "<");

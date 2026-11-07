@@ -2,7 +2,6 @@ package monsterarena;
 
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
-import monsterarena.model.MapSize;
 import monsterarena.ui.StartScreen;
 
 import java.io.IOException;
@@ -12,13 +11,13 @@ public class App {
         Screen screen = new DefaultTerminalFactory().createScreen();
         screen.startScreen();
 
-        MapSize mapSize = StartScreen.show(screen);
-        if (mapSize == null) {
+        StartScreen.InitialData initialData = StartScreen.show(screen);
+        if (initialData.mapSize() == null || initialData.playerName() == null) {
             screen.stopScreen();
             return;
         }
 
-        Game game = new Game(screen, mapSize);
+        Game game = new Game(screen, initialData);
         game.startGameLoop();
     }
 }

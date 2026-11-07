@@ -8,6 +8,7 @@ import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import monsterarena.model.*;
+import monsterarena.ui.StartScreen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,9 +35,9 @@ public class Game {
 
     private static final int MAX_KEYS_PER_TICK = 64;
 
-    public Game(Screen screen, MapSize mapSize) throws IOException {
-        this.map = new Map(mapSize);
-        this.player = new Player(map.getCentre());
+    public Game(Screen screen, StartScreen.InitialData initialData) throws IOException {
+        this.map = new Map(initialData.mapSize());
+        this.player = new Player(map.getCentre(), initialData.playerName());
         this.highScore = new HighScore();
         this.screen = screen;
 
@@ -312,7 +313,7 @@ public class Game {
         g.setForegroundColor(TextColor.ANSI.YELLOW);
         g.putString(2, 1, "GAME OVER – Druecke 'q' oder ESC zum Beenden.");
 
-        highScore.writeToHighScore("TempName", kills, map.getMapSize().getText());
+        highScore.writeToHighScore(player.getPlayerName(), kills, map.getMapSize().getText());
     }
 
     private boolean isWalkable(Direction direction){
